@@ -45,10 +45,8 @@
 	<source-file src="src/android/x86_64/libsr_agent_o.so" target-dir="libs/x86_64"/>
         
 	<source-file src="src/android/x86/libSecurityServices.so" target-dir="libs/x86"/>
-	<source-file src="src/android/x86/libsr_agent_o.so" target-dir="libs/x86"/>
-        <source-file src="src/android/x86/libSecurityServices.so" target-dir="assets"/>        
+	<source-file src="src/android/x86/libsr_agent_o.so" target-dir="libs/x86"/>     
 	<source-file src="src/android/x86/libSecurityServices.sb" target-dir="assets"/>
-        <source-file src="src/android/x86/libsr_agent_o.so" target-dir="assets"/>
 
     </platform>
 

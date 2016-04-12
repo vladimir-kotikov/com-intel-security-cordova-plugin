@@ -116,4 +116,4 @@ Cordova plugin
 
 Crosswalk Extnesion 
 ===================		
-	For Crosswalk extension please see https://github.com/AppSecurityApi/com-intel-security-crosswalk-extension.git
+For Crosswalk extension please see https://github.com/AppSecurityApi/com-intel-security-crosswalk-extension.git

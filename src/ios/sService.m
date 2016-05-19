@@ -38,61 +38,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 #import <Foundation/Foundation.h>
 
 
-@interface WhitelistConfigParser : NSObject <NSXMLParserDelegate> {}
-
-@property sservice_size_t config_access_id;
-@property sservice_size_t config_subdomains_id;
-@property sservice_result_t res;
-
-@end
-
-@implementation WhitelistConfigParser
-
-- (id)init
-{
-    self = [super init];
-    self.config_access_id = CONFIG_ID_WHITELIST_ACCESS_MIN;
-    self.config_subdomains_id = CONFIG_ID_WHITELIST_SUBDOMAINS_MIN;
-    self.res = SSERVICE_SUCCESS_NOINFO;
-    return self;
-}
-
-
-- (sservice_result_t)getErrorCode
-{
-    return self.res;
-}
-
-- (void)parser:(NSXMLParser*)parser didStartElement:(NSString*)elementName namespaceURI:(NSString*)namespaceURI qualifiedName:(NSString*)qualifiedName attributes:(NSDictionary*)attributeDict
-{
-    
-    if (([elementName isEqualToString:@"access"]) &&
-        (self.config_access_id <= CONFIG_ID_WHITELIST_ACCESS_MAX) &&
-        (IS_SUCCESS(self.res)))
-    {
-        
-        NSString* origin = [attributeDict valueForKey:@"origin"];
-        if (origin != nil)
-        {
-            self.res = sservice_config_set((config_id_enum_t)self.config_access_id, [origin UTF8String], (sservice_size_t)[origin length]+1);
-            
-            if (IS_SUCCESS(self.res))
-            {
-                NSString* subdomains = [attributeDict valueForKey:@"subdomains"];
-                if (subdomains != nil)
-                {
-                    self.res = sservice_config_set((config_id_enum_t)self.config_subdomains_id, [subdomains UTF8String], (sservice_size_t)[subdomains length]+1);
-                }
-            }
-            self.config_access_id++;
-            self.config_subdomains_id++;
-        }
-    }
-}
-
-@end
-
-
 #pragma mark - APIs
 
 @implementation sService
@@ -106,7 +51,7 @@ static inline void DoNothing(char const * formatStr, ... )
 #define XSSLOG_BRIDGE( log_level, format_str, ...) DoNothing(format_str,  ##__VA_ARGS__)
 #endif
 
-#define STRING_ENCODING (NSUTF8StringEncoding)
+#define STRING_ENCODING (NSUTF16LittleEndianStringEncoding)
 
 -(NSInteger)getIntFromArgument: (CDVInvokedUrlCommand *)command
 					argNumber :(NSInteger)arg
@@ -160,87 +105,6 @@ static inline void DoNothing(char const * formatStr, ... )
         }
     }
     return true ;
-}
-
-
-- (sservice_result_t ) getInternalPath
-{
-    // get the documents directory;
-    // first path in array is "document directory" .
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    if( !paths )
-    {
-    	return SSERVICE_ERROR_INTERNAL_ERROR ;
-    }
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    if(!documentsDirectory)
-    {
-    	return SSERVICE_ERROR_INTERNAL_ERROR;
-    }
-    
-    return sservice_config_set(CONFIG_ID_LOCAL_PATH, [documentsDirectory UTF8String], (sservice_size_t)[documentsDirectory length]+1 ) ;
-}
-
-
-- (void) GlobalInit:(CDVInvokedUrlCommand *)command
-{
-    sservice_result_t res = SSERVICE_SUCCESS_NOINFO ;
-    XSSLOG_BRIDGE(LOG_INFO, "%s:start", __FUNCTION__);
-
-    res = sservice_global_init_start() ;
-    
-    if( IS_SUCCESS(res) )
-    {
-        //this call will move the rest of the procedure to another thread
-        [self.commandDelegate runInBackground:^{
-            
-            sservice_result_t res = [self getInternalPath ] ;
-            if( IS_SUCCESS(res) )
-            {
-                NSString* appName = NSBundle.mainBundle.infoDictionary  [@"CFBundleDisplayName"];
-                res = sservice_config_set(CONFIG_ID_APP_ID, [appName UTF8String], (sservice_size_t)[appName length]+1 ) ;
-            }
-            if( IS_SUCCESS(res) )
-            {
-                NSString *strApplicationUUID = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-                res = sservice_config_set(CONFIG_ID_HARDWARE_ID, [strApplicationUUID UTF8String], (sservice_size_t)[strApplicationUUID length]+1 ) ;
-            }
-            if( IS_SUCCESS(res) )
-            {
-                NSString *path = [[NSBundle mainBundle] pathForResource:@"config" ofType:@"xml"];
-                NSURL *url = [NSURL fileURLWithPath:path]; //here you have to pass the filepath
-                NSXMLParser *parser = [[NSXMLParser alloc] initWithContentsOfURL :url];
-                WhitelistConfigParser *whitelistConfigParser = [[WhitelistConfigParser alloc] init];
-                    
-                [parser setDelegate:whitelistConfigParser];
-                // Invoke the parser and check the result
-                [parser parse];
-                    
-                res = [whitelistConfigParser getErrorCode ];
-            }
-            if( IS_SUCCESS(res) )
-            {
-                res = sservice_global_init_end() ;
-            }
-            CDVPluginResult *pluginResult = NULL ;
-            if( IS_FAILED(res) )
-            {
-                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:res.error_or_warn_code];
-                XSSLOG_BRIDGE(LOG_ERROR, "Exiting from %s end, error 0x%x", __FUNCTION__, res.error_or_warn_code ) ;
-            }
-            else
-            {
-                XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, Success", __FUNCTION__ ) ;
-                pluginResult = [ CDVPluginResult resultWithStatus: CDVCommandStatus_OK ];
-            }
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            
-        }];
-    } else {
-        XSSLOG_BRIDGE(LOG_ERROR, "Exiting from %s start, error 0x%x", __FUNCTION__, res.error_or_warn_code ) ;
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:res.error_or_warn_code];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
 }
 
 /** Function is callback for cordova call of
@@ -552,17 +416,10 @@ static inline void DoNothing(char const * formatStr, ... )
         NSString *base64Out = nil ;
         if( IS_SUCCESS(res))
         {
-            NSData *temp = [[ NSData alloc ] initWithBytes:sealed_data length:sealed_data_size ];
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > 70000
-            base64Out = [temp base64EncodedStringWithOptions:0] ;
-#else
+            NSData *temp = [[ NSData alloc ] initWithBytesNoCopy:sealed_data length:sealed_data_size ];
             base64Out = [temp base64EncodedString] ;
-#endif
         }
-        if(sealed_data)
-	{
-		free( sealed_data ) ;
-        }
+        
         //Prepare callback parameters and execute necessary callback.
         CDVPluginResult *pluginResult = NULL ;
         if( IS_FAILED(res) )
@@ -889,19 +746,10 @@ static inline void DoNothing(char const * formatStr, ... )
         CDVPluginResult *pluginResult = NULL;
         if( IS_SUCCESS(res) )
         {
-            //list size should be at least 3 since the empty array is "[]" + the null terminator
-            if(list_size>strlen("[]"))
-            {
-                //Convert results to ObjectiveC NSArray to return to cordova runtime. Size-1 since the encoding adds the \0 automatically
-                NSString *result = [[NSString alloc] initWithBytes:list_buffer length:list_size-1 encoding:NSUTF8StringEncoding];
-           	 XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, Success", __FUNCTION__ ) ;
-           	 pluginResult = [ CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:result ];
-            }
-            else
-	    {
-                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                    messageAsInt:SSERVICE_ERRORCODE_INTERNAL_ERROR];
-            }
+            //Convert results to ObjectiveC NSArray to return to cordova runtime
+            NSString *result = [[NSString alloc] initWithBytes:list_buffer length:list_size encoding:NSUTF8StringEncoding];
+            XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, Success", __FUNCTION__ ) ;
+            pluginResult = [ CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:result ];
         }
         else
         {
@@ -1155,7 +1003,7 @@ static inline void DoNothing(char const * formatStr, ... )
  */
 - (void) SecureTransportSetURL:(CDVInvokedUrlCommand *)command
 {
-    if( ![self checkArguments:command argNumber:3])
+    if( ![self checkArguments:command argNumber:2])
 	{
 		XSSLOG_BRIDGE(LOG_ERROR, "Exiting from %s, error 0x%x", __FUNCTION__, SSERVICE_ERROR_INTERNAL_ERROR ) ;
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:SSERVICE_ERROR_INTERNAL_ERROR.error_or_warn_code];
@@ -1167,11 +1015,11 @@ static inline void DoNothing(char const * formatStr, ... )
 
         sservice_transport_handle_t transportInstanceID= [self getHandleFromArgument: command argNumber: 0 ] ;
         NSString *url = [command.arguments objectAtIndex:1];
-	NSString *server = [command.arguments objectAtIndex:2];
         //Retrieve all necessary parameters.
-        XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, url: %s, PublicKey: %s" , __FUNCTION__, [url UTF8String],[server  UTF8String]) ;
-        res = sservice_securetransport_set_url( transportInstanceID, [url UTF8String],[server  UTF8String]);
+        XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, url: %s" , __FUNCTION__, [url UTF8String]) ;
+        res = sservice_securetransport_set_url( transportInstanceID, [url UTF8String] );
 
+        
         //Prepare callback parameters and execute necessary callback.
         CDVPluginResult *pluginResult = NULL ;
         if( IS_FAILED(res) )
@@ -1230,9 +1078,9 @@ static inline void DoNothing(char const * formatStr, ... )
  * @param [in] command - array of parameters, passed by Cordova runtime.
  * @return nothing; result is passed to callback using self.commandDelegate
  */
- - (void) SecureTransportSetHeaders:(CDVInvokedUrlCommand *)command
+ - (void) SecureTransportSetHeaderValue:(CDVInvokedUrlCommand *)command
 {
-    if( ![self checkArguments:command argNumber:2])
+    if( ![self checkArguments:command argNumber:3])
 	{
 		XSSLOG_BRIDGE(LOG_ERROR, "Exiting from %s, error 0x%x", __FUNCTION__, SSERVICE_ERROR_INTERNAL_ERROR ) ;
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:SSERVICE_ERROR_INTERNAL_ERROR.error_or_warn_code];
@@ -1243,10 +1091,11 @@ static inline void DoNothing(char const * formatStr, ... )
         sservice_result_t res = SSERVICE_SUCCESS_NOINFO ;
 
         sservice_transport_handle_t transportInstanceID= [self getHandleFromArgument: command argNumber: 0 ] ;
-        NSString *headers = [command.arguments objectAtIndex:1];
+        NSString *key = [command.arguments objectAtIndex:1];
+        NSString *value = [command.arguments objectAtIndex:2];
         //Retrieve all necessary parameters.
-        XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, headers: %s" , __FUNCTION__, [headers UTF8String]) ;
-        res = sservice_securetransport_set_headers(transportInstanceID, [headers UTF8String]);    
+        XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, header: %s, value: %s" , __FUNCTION__, [key UTF8String], [value UTF8String]) ;
+        res = sservice_securetransport_set_header(transportInstanceID, [key UTF8String], [value UTF8String]);    
 
         //Prepare callback parameters and execute necessary callback.
         CDVPluginResult *pluginResult = NULL ;
@@ -1288,21 +1137,15 @@ static inline void DoNothing(char const * formatStr, ... )
         XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, requestBody: %s, format: %i, secureDataDescriptors: %s" , __FUNCTION__, [requestBody UTF8String],requestFormat, [secureDataDescriptors UTF8String]) ;
         sservice_size_t response_header_size = 0 ;
         sservice_size_t response_body_size = 0 ;
-	unsigned long http_status_code = 0 ;
         res = sservice_securetransport_send_request(transportInstanceID,
                     [requestBody UTF8String],
                     (sservice_secure_transport_content_type_t)requestFormat, 
                     [secureDataDescriptors UTF8String] ,
-		    &http_status_code,
                     &response_header_size, &response_body_size );
+        char *response_header = NULL;
         //Prepare callback parameters and execute necessary callback.
         CDVPluginResult *pluginResult = NULL ;
-        
-        char *response_body = NULL ;
-        char *response_header = NULL;
-        
-        //setting the headers
-        if( IS_SUCCESS( res ) && response_header_size>0)
+        if( IS_SUCCESS( res ))
         {
             response_header = malloc(response_header_size) ;
             if(!response_header)
@@ -1310,16 +1153,9 @@ static inline void DoNothing(char const * formatStr, ... )
                 res = SSERVICE_ERROR_INSUFFICIENTMEMORY ;
                 XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, error 0x%x", __FUNCTION__, res.error_or_warn_code ) ;
             }
-            if( IS_SUCCESS( res ))
-            {
-                res = sservice_securetransport_get_response_header(transportInstanceID,
-                                                                   response_header_size,
-                                                                   response_header );
-            }
         }
-        
-        //setting the response body
-        if( IS_SUCCESS( res ) && response_body_size>0)
+        char *response_body = NULL ;
+        if( IS_SUCCESS( res ))
         {
             response_body =malloc(response_body_size) ;
             if(!response_body)
@@ -1327,16 +1163,19 @@ static inline void DoNothing(char const * formatStr, ... )
                 res = SSERVICE_ERROR_INSUFFICIENTMEMORY ;
                 XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, error 0x%x", __FUNCTION__, res.error_or_warn_code ) ;
             }
-            if( IS_SUCCESS( res ))
-            {
-                res = sservice_securetransport_get_response_body(transportInstanceID,
-                                                                 response_body_size,
-                                                                 response_body);
-            }
-
         }
-        
-        //setting the cordova response
+        if( IS_SUCCESS( res ))
+        {
+            res = sservice_securetransport_get_response_header(transportInstanceID, 
+                                                               response_header_size, 
+                                                               response_header );
+        }        
+        if( IS_SUCCESS( res ))
+        {
+            res = sservice_securetransport_get_response_body(transportInstanceID, 
+                                                        response_body_size, 
+                                                        response_body);
+        }
         if( IS_FAILED(res) )
         {
             
@@ -1346,28 +1185,11 @@ static inline void DoNothing(char const * formatStr, ... )
         else
         {
             XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, Success", __FUNCTION__ ) ;
-            NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-	    //sets the http status code from the http request
-	    [result setObject:[NSString stringWithFormat:@"%d",http_status_code] forKey:@"responseHttpStatus"];
-	    if(!response_header)
-            {
-                [result setObject:[NSString stringWithUTF8String:""] forKey:@"responseHeader"];
-            }
-            else
-            {
-                [result setObject:[NSString stringWithUTF8String:response_header] forKey:@"responseHeader"];
-            }
-	    
-	    if(!response_body)
-            {
-               [result setObject:[NSString stringWithUTF8String:""] forKey:@"responseBody"];
-            }
-            else
-            {
-                [result setObject:[NSString stringWithUTF8String:response_body] forKey:@"responseBody"];
-            }
-
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+	    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+	    [result setObject:[NSString stringWithUTF8String:response_header] forKey:@"responseHeader"];
+	    [result setObject:[NSString stringWithUTF8String:response_body] forKey:@"responseBody"];
+            
+	    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
         }
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         if(response_body)
@@ -1381,46 +1203,6 @@ static inline void DoNothing(char const * formatStr, ... )
         
     }];
 }
-
-
-/** Function is callback for cordova call of
- *         cordova.exec(success, failInternal, "IntelSecurity", "SecureStorageAbort", [defaults.id, defaults.storageType]);
- * @param [in] command - array of parameters, passed by Cordova runtime.
- * @return nothing; result is passed to callback using self.commandDelegate
- */
-- (void) SecureTransportAbort:(CDVInvokedUrlCommand *)command
-{
-    if( ![self checkArguments:command argNumber:1])
-    {
-        XSSLOG_BRIDGE(LOG_ERROR, "Exiting from %s, error 0x%x", __FUNCTION__, SSERVICE_ERROR_INTERNAL_ERROR ) ;
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:SSERVICE_ERROR_INTERNAL_ERROR.error_or_warn_code];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
-    //this call will move the rest of the procedure to another thread
-    [self.commandDelegate runInBackground:^{
-        sservice_result_t res = SSERVICE_SUCCESS_NOINFO ;
-        sservice_transport_handle_t transportInstanceID= [self getHandleFromArgument: command argNumber: 0 ] ;
-        XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, transportInstanceID: %x" , __FUNCTION__, transportInstanceID) ;
-        
-        res = sservice_securetransport_abort(transportInstanceID);
-        
-        //Prepare callback parameters and execute necessary callback.
-        CDVPluginResult *pluginResult = NULL ;
-        if( IS_FAILED(res) )
-        {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                messageAsInt:res.error_or_warn_code];
-        }
-        else
-        {
-            XSSLOG_BRIDGE(LOG_INFO, "Exiting from %s, Success", __FUNCTION__ ) ;
-            pluginResult = [ CDVPluginResult resultWithStatus: CDVCommandStatus_OK ];
-        }
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }];
-}
-
-
 
 /** Function is callback for cordova call of
  *         cordova.exec(success, failInternal, "IntelSecurity", "SecureStorageDelete", [defaults.id, defaults.storageType]);
@@ -1441,7 +1223,7 @@ static inline void DoNothing(char const * formatStr, ... )
         sservice_transport_handle_t transportInstanceID= [self getHandleFromArgument: command argNumber: 0 ] ;
         XSSLOG_BRIDGE(LOG_INFO, "Entering to %s, transportInstanceID: %x" , __FUNCTION__, transportInstanceID) ;
 
-        res = sservice_securetransport_destroy(transportInstanceID);
+        res = sservice_securetransport_delete(transportInstanceID);
         
         //Prepare callback parameters and execute necessary callback.
         CDVPluginResult *pluginResult = NULL ;
@@ -1490,11 +1272,35 @@ static inline void DoNothing(char const * formatStr, ... )
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) unitTest:(CDVInvokedUrlCommand *)command
+{
+	//Check input parameter. Probably not necessary
+    if( ![self checkArguments:command argNumber:1])
+	{
+		XSSLOG_BRIDGE(LOG_ERROR, "Exiting from %s, error 0x%x", __FUNCTION__, SSERVICE_ERROR_INTERNAL_ERROR.error_or_warn_code ) ;
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt: SSERVICE_ERROR_INTERNAL_ERROR.error_or_warn_code];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return ;
+	}
+    [self.commandDelegate runInBackground:^{
+        sservice_result_t res = SSERVICE_SUCCESS_NOINFO ;
+        
+        sservice_debug_unit_test() ;
+        CDVPluginResult *pluginResult = NULL ;
+        if( IS_FAILED(res) )
+        {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                             messageAsString:[NSString stringWithFormat:@"%d", res.error_or_warn_code]];
+        }
+        else
+        {
+            pluginResult = [ CDVPluginResult resultWithStatus: CDVCommandStatus_OK ];
+        }
+        // Execute sendPluginResult on this plugin's commandDelegate, passing in the ...
+        // ... instance of CDVPluginResult
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
+}
 #endif
 @end
-
-
-
-
-
 

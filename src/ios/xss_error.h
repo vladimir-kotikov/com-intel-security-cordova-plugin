@@ -116,6 +116,8 @@ typedef enum
 	SSERVICE_ERRORCODE_INVALIDBUFFERSIZE = 1007,					/**< invalid( not enough ) buffer size in input parameters */
 	SSERVICE_ERRORCODE_MEMCPY = 1008,								/**< secure_memcpy failed*/
 	SSERVICE_ERRORCODE_CRYPTO = 1009,								/**< Error in crypto operation*/
+	SSERVICE_ERRORCODE_TOKEN_INTEGRITY = 1010,					    /**< Error with token integrity*/
+	SSERVICE_ERRORCODE_TOKEN_MODE = 1011,					        /**< Error with token mode*/
 }ss_error_code_t; 
 
 
@@ -163,6 +165,9 @@ typedef enum
 #define SSERVICE_ERROR_INVALID_ARGUMENT_SIZE				          CREATE_ERROR( SSERVICE_ERRORCODE_INVALID_ARGUMENT_SIZE)
 #define SSERVICE_ERROR_INCORRECT_STATE								  CREATE_ERROR( SSERVICE_ERRORCODE_INCORRECT_STATE)
 #define	SSERVICE_ERROR_ACTION_ABORTED								  CREATE_ERROR( SSERVICE_ERRORCODE_ACTION_ABORTED)
+#define	SSERVICE_ERROR_TOKEN_INTEGRITY						          CREATE_ERROR( SSERVICE_ERRORCODE_TOKEN_INTEGRITY)
+#define	SSERVICE_ERROR_TOKEN_MODE								      CREATE_ERROR( SSERVICE_ERRORCODE_TOKEN_MODE)
+
 
 /** checks if result is success
 * @param [in] res - result information.

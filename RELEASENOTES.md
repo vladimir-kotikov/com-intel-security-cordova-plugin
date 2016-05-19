@@ -1,3 +1,17 @@
+2.0.0 (April, 2016)			
+	Move to promises API (still support callback API)
+	Updated plugin name to 'com-intel-security' to be aligned with NPMJS style
+	Updated OpenSSL to version 1.0.2g
+		
+	Supported Platforms: Android, iOS, Windows MUI 8/8.1/10
+	
+	The plugin was tested on:
+	- Android Intel and ARM devices
+    - iPhone ARM device
+	- Windows 8 Intel (x86, x64) devices
+    - Windows 8.1  ARM and Intel (x86, x64) devices
+    - Windows 10 Intel (x86, x64) devices
+
 1.4.1 (February, 2016)
 	Added support for bitcode optimization in iOS
 	Support Cordova hook- no need to execute manually chooseArch_Windows.js to attach the correct binaries for the architecture (x86/x64/arm)

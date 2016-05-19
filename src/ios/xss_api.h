@@ -376,10 +376,10 @@ sservice_result_t sservice_securetransport_destroy
 	(
 	IN  sservice_transport_handle_t handle
 	);
-	void sservice_log(  sservice_log_source_t log_source, sservice_log_level_t log_level, char const *format_str, ... ) ;
 
-/** @} */ 
-    
+void sservice_log(  sservice_log_source_t log_source, sservice_log_level_t log_level, char const *format_str, ... ) ;
+
+   
 #ifdef __cplusplus
 }
 #endif

@@ -44,7 +44,7 @@ Cordova plugin
 			-or-
 			cordova run (connected device)
 
-	Cordova 5.1.1 Windows build flow
+	Cordova 5.4.1 Windows build flow
 	================================
 		
 		It is recommended to upgrade the Cordova windows tools, please run "cordova platform update windows 4.2.0"
@@ -85,7 +85,7 @@ Cordova plugin
 		3. Add App Security API plugin by:
 			a) double click on config.xml file 
 			b) choose plugins tab
-			c) choose custom and copy the github link of the plugin: https://github.com/01org/AppSecurityApi
+			c) choose custom and copy the github link of the plugin: https://github.com/AppSecurityApi/com-intel-security-cordova-plugin.git
 		
 		4. Add your web app content to the www folder.
 		
@@ -104,7 +104,7 @@ Cordova plugin
 		2. Add App Security API plugin by:
 			a) double click on config.xml file 
 			b) choose plugins tab
-			c) choose custom and copy the github link of the plugin: https://github.com/01org/AppSecurityApi
+			c) choose custom and copy the github link of the plugin: https://github.com/AppSecurityApi/com-intel-security-cordova-plugin.git
 			
 		3. Add your web app content to the www folder.
 		
@@ -113,38 +113,7 @@ Cordova plugin
 		
 		
 		Note: iOS has not been tested yet but according to the documentation it should be the same as Android with one change- make sure you choose iOS in the build.
-		
-Crosswalk extension
-===================
-	
-	You can find the extensiuon dll file (IntelSecurityServicesExtension.dll) and the JavaScript file (appSecurityApi_XW.js) in windows_crosswalk directory
-	
-	How to use the extension
-	========================
-		Include the appSecurityApi_XW.js file from windows_crosswalk directory into your application, you have two modes to work with the dll:
-		
-		Crosswalk Shared Mode 
-		=====================
-		1. From the folder includes index.html
-			python -m http.server 8000
-		2. From Crosswalk executable folder - 'PathToDLL' appears in the command line below denotes the location where Crosswalk extension 'IntelSecurityServicesExtension.dll' is placed
-			xwalk.exe --allow-external-extensions-for-remote-sources --external-extensions-path=PathToDLL http://localhost:8000
-		3. See more details in https://crosswalk-project.org/documentation/windows/extensions.html 
-	
-		MSI Installer
-		=============
-		Add the extension to the manifest file (in manifest file: 'xwalk_extensions':'IntelSecurityServicesExtension.dll' 
-			details in https://github.com/crosswalk-project/crosswalk-app-tools/blob/master/manifest.md)
-		Create a MSI installer: crosswalk-pkg -p windows <path> 
-			details in https://github.com/crosswalk-project/crosswalk-app-tools
-			
-	
-	Redistributable
-	===============
-	
-	You have to install Visual C++ Redistributable for Visual Studio 2015 on the system before you call the dll. 
-	When you deploy your application, make sure that Visual C++ Redistributable for Visual Studio 2015 is installed before you run the application.
-	
-	Known Issues (Crosswalk extension only)
-	============
-	1. 'Abort' and 'Destroy' Methods from SecureTransport MegaFunction might not work properly.
+
+Crosswalk Extnesion 
+===================		
+For Crosswalk extension please see https://github.com/AppSecurityApi/com-intel-security-crosswalk-extension.git

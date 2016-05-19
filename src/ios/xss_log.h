@@ -1,6 +1,5 @@
 #ifndef SSERVICE_LOGGER_H
 #define SSERVICE_LOGGER_H
-
 	
 /******************************************************************************
 "Copyright (c) 2015-2015, Intel Corporation
@@ -51,13 +50,11 @@ typedef enum
 #define LOG_SOURCE_BRIDGE_VAL (1)
 #define LOG_SOURCE_RUNTIME_VAL (0)
 
-typedef enum 
+typedef enum
 {
-	LOG_SOURCE_JS=LOG_SOURCE_JS_VAL,			
-	LOG_SOURCE_BRIDGE = LOG_SOURCE_BRIDGE_VAL,	
-	LOG_SOURCE_RUNTIME = LOG_SOURCE_RUNTIME_VAL,
+    LOG_SOURCE_JS=LOG_SOURCE_JS_VAL,
+    LOG_SOURCE_BRIDGE = LOG_SOURCE_BRIDGE_VAL,
+    LOG_SOURCE_RUNTIME = LOG_SOURCE_RUNTIME_VAL,
 } sservice_log_source_t ;
-
-
 
 #endif

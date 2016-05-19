@@ -25,7 +25,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 /**
  * "Constants" definitions
  */
-var MAX_SAFE_INTEGER_VALUE = 9007199254740991; // ((2^53)-1)		
+var MAX_SAFE_INTEGER_VALUE = 9007199254740991; // ((2^53)-1)        
 
 /**
  * Helper associative array:
@@ -181,10 +181,44 @@ function isEmptyObject(object) {
     return true;
 }
 
-/**
- * Secure Data Mega Function
- * More details can be found in the API documentation
- */
+/*
+    arg1 - array, contains the arguments passed to the API call (Options or InstanceID)
+    funcAsync - function, the API function to call 
+
+    this function create and return a promise object that will reject when the API call fails, or resolve when the API call succeed.
+*/
+function _createPromise(arg1, funcAsync) {
+    var deferred = Q.defer();
+    funcAsync(
+        function(returnValue) { // success
+            deferred.resolve(returnValue);
+        },
+        function(errorMsg) { // failure
+            deferred.reject(errorMsg);
+        },
+        arg1);
+    return deferred.promise;
+}
+
+/*
+    Args - array, contains the arguments passed to the API call
+    funcAsync - function, the function to call after dispatching
+    type - string, the type of the first argument for this function ('Number' for instanceId and 'object' for options)
+
+    This function gets the arguments from the API call, and do as follow:
+    If only one argument passed and his type is the type we expecting (object type for “Options” and Number type for “instanceID”) we continue with the Promises methodology.
+    In any other case, we Refers to the call as if it were with the old methodology.
+*/
+function _dispatch(Args, funcAsync, type) {
+    if (
+        ((Args.length == 3) && (typeof Args[2] === type))) //if exactly one argument from the right type passed 
+    {
+        funcAsync(Args[0], Args[1], Args[2]); //Refers to the call as if it were with the old methodology.
+        return null;
+    } else {
+        return _createPromise(Args[0], funcAsync); //continue with the Promises methodology.
+    }
+}
 
 function _globalInitConstructor() {
     cordova.addConstructor(function() {
@@ -193,9 +227,82 @@ function _globalInitConstructor() {
 }
 var _globalInit = new _globalInitConstructor();
 
+var IntelSecurityServicesSecureData = {
+    createFromDataExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.data, args.tag, args.extraKey, args.appAccessControl, args.deviceLocality, args.sensitivityLevel,
+            Number(args.noStore), Number(args.noRead), args.creator, args.owners, args.webOwnersJSON
+        ]);
+    },
+    createFromSealedDataExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.sealedData, args.extraKey]);
+    },
+    changeExtraKeyExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID, args.extraKey]);
+    },
+    getDataExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    getSealedDataExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    getTagExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    getPolicyExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    getOwnersExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    getCreatorExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    getWebOwnersExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    destroyExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    }
+};
 
-var _secureData = {
-    createFromData: function(success, fail, options) {
+var IntelSecurityServicesSecureStorage = {
+    readExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.id, args.storageType, args.extraKey]);
+    },
+    writeExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.id, args.storageType, args.instanceID]);
+    },
+    deleteExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.id, args.storageType]);
+    },
+};
+
+var IntelSecurityServicesSecureTransport = {
+    openExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.url, args.method, args.serverKey, args.timeout]);
+    },
+    setURLExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID, args.url, args.serverKey]);
+    },
+    setMethodExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID, args.method]);
+    },
+    setHeadersExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID, args.headers]);
+    },
+    sendRequestExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID, args.requestBody, args.requestFormat, args.secureDataDescriptors]);
+    },
+    abortExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    },
+    destroyExec: function(success, fail, service, action, args) {
+        cordova.exec(success, fail, service, action, [args.instanceID]);
+    }
+};
+//Secure Data Asynchronous API implementation
+var _internalSecureData = {
+    createFromDataAsync: function(success, fail, options) {
         options = options || {};
         var defaults = {
             data: '',
@@ -231,13 +338,22 @@ var _secureData = {
             failInternal('Argument type inconsistency detected', fail);
         } else {
             var webOwnersJSON = "[]";
-            try {
+            try {   
+                if (defaults.webOwners != null) {
+                    for (var webOwner in defaults.webOwners) {
+                        if (typeof (defaults.webOwners[webOwner]) != "string") {
+                            failInternal('Argument type inconsistency detected', fail);
+                            return;
+                        }
+                    }
+                }
                 webOwnersJSON = JSON.stringify(defaults.webOwners);
             } catch (e) {
                 failInternal('Argument type inconsistency detected', fail);
                 return;
             }
-            cordova.exec(
+            defaults.webOwnersJSON = webOwnersJSON;
+            IntelSecurityServicesSecureData.createFromDataExec(
                 function(instanceID) {
                     successConvertToNumber(instanceID, success, fail);
                 },
@@ -245,12 +361,11 @@ var _secureData = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataCreateFromData', [defaults.data, defaults.tag, defaults.extraKey, defaults.appAccessControl, defaults.deviceLocality, defaults.sensitivityLevel,
-                    Number(defaults.noStore), Number(defaults.noRead), defaults.creator, defaults.owners, webOwnersJSON
-                ]);
+                'SecureDataCreateFromData',
+                defaults);
         }
     },
-    createFromSealedData: function(success, fail, options) {
+    createFromSealedDataAsync: function(success, fail, options) {
         options = options || {};
         var defaults = {
             sealedData: '',
@@ -265,7 +380,7 @@ var _secureData = {
             (!isValidNonNegativeSafeInteger(defaults.extraKey))) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureData.createFromSealedDataExec(
                 function(instanceID) {
                     successConvertToNumber(instanceID, success, fail);
                 },
@@ -273,10 +388,11 @@ var _secureData = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataCreateFromSealedData', [defaults.sealedData, defaults.extraKey]);
+                'SecureDataCreateFromSealedData',
+                defaults);
         }
     },
-    changeExtraKey: function(success, fail, options) {
+    changeExtraKeyAsync: function(success, fail, options) {
         options = options || {};
         var defaults = {
             instanceID: 0,
@@ -291,62 +407,75 @@ var _secureData = {
             !isValidNonNegativeSafeInteger(defaults.extraKey)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureData.changeExtraKeyExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataChangeExtraKey', [defaults.instanceID, defaults.extraKey]);
+                'SecureDataChangeExtraKey',
+                defaults);
         }
     },
-    getData: function(success, fail, instanceID) {
+    getDataAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureData.getDataExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetData', [instanceID]);
+                'SecureDataGetData', {
+                    instanceID: instanceID
+                });
         }
     },
-    getSealedData: function(success, fail, instanceID) {
+    getSealedDataAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureData.getSealedDataExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetSealedData', [instanceID]);
+                'SecureDataGetSealedData', {
+                    instanceID: instanceID
+                });
         }
     },
-    getTag: function(success, fail, instanceID) {
+    getTagAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            var args = {
+                instanceID: instanceID
+            };
+            IntelSecurityServicesSecureData.getTagExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetTag', [instanceID]);
+                'SecureDataGetTag',
+                args);
         }
     },
-    getPolicy: function(success, fail, instanceID) {
+    getPolicyAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            var args = {
+                instanceID: instanceID
+            };
+            IntelSecurityServicesSecureData.getPolicyExec(
                 function(policy) {
                     if (isNumberBooleanValue(policy.noStore) || isNumberBooleanValue(policy.noRead)) {
                         failInternal('Internal error occurred', fail);
+                        return;
                     }
                     policy.noStore = Boolean(policy.noStore);
                     policy.noRead = Boolean(policy.noRead);
@@ -356,27 +485,32 @@ var _secureData = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetPolicy', [instanceID]);
+                'SecureDataGetPolicy',
+                args);
         }
     },
-    getOwners: function(success, fail, instanceID) {
+    getOwnersAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            var args = {
+                instanceID: instanceID
+            };
+            IntelSecurityServicesSecureData.getOwnersExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetOwners', [instanceID]);
+                'SecureDataGetOwners',
+                args);
         }
     },
-    getCreator: function(success, fail, instanceID) {
+    getCreatorAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureData.getCreatorExec(
                 function(instanceID) {
                     successConvertToNumber(instanceID, success, fail);
                 },
@@ -384,14 +518,19 @@ var _secureData = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetCreator', [instanceID]);
+                'SecureDataGetCreator', {
+                    instanceID: instanceID
+                });
         }
     },
-    getWebOwners: function(success, fail, instanceID) {
+    getWebOwnersAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            var args = {
+                instanceID: instanceID
+            };
+            IntelSecurityServicesSecureData.getWebOwnersExec(
                 function(webOwnersString) {
                     try {
                         var webOwnersArray = JSON.parse(webOwnersString);
@@ -404,31 +543,34 @@ var _secureData = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataGetWebOwners', [instanceID]);
+                'SecureDataGetWebOwners',
+                args);
         }
     },
 
-    destroy: function(success, fail, instanceID) {
+    destroyAsync: function(success, fail, instanceID) {
         if (!isValidNonNegativeSafeInteger(instanceID)) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureData.destroyExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureDataDestroy', [instanceID]);
+                'SecureDataDestroy', {
+                    instanceID: instanceID
+                });
         }
     },
 };
 
-/**
- * Secure Storage Mega Function
- * More details can be found in the API documentation
- */
-var _secureStorage = {
-    read: function(success, fail, options) {
+
+
+
+//Secure storage Asynchronous API implementation
+var _internalSecureStorage = {
+    readAsync: function(success, fail, options) {
         options = options || {};
         var defaults = {
             id: '',
@@ -445,7 +587,7 @@ var _secureStorage = {
             (!isValidNonNegativeSafeInteger(defaults.extraKey))) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureStorage.readExec(
                 function(instanceID) {
                     successConvertToNumber(instanceID, success, fail);
                 },
@@ -453,10 +595,11 @@ var _secureStorage = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureStorageRead', [defaults.id, defaults.storageType, defaults.extraKey]);
+                'SecureStorageRead',
+                defaults);
         }
     },
-    write: function(success, fail, options) {
+    writeAsync: function(success, fail, options) {
         options = options || {};
         var defaults = {
             id: '',
@@ -473,16 +616,17 @@ var _secureStorage = {
             (!isValidNonNegativeSafeInteger(defaults.instanceID))) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureStorage.writeExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureStorageWrite', [defaults.id, defaults.storageType, defaults.instanceID]);
+                'SecureStorageWrite',
+                defaults);
         }
     },
-    delete: function(success, fail, options) {
+    deleteAsync: function(success, fail, options) {
         options = options || {};
         var defaults = {
             id: '',
@@ -497,22 +641,23 @@ var _secureStorage = {
             (!isValidNonNegativeSafeInteger(defaults.storageType))) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureStorage.deleteExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureStorageDelete', [defaults.id, defaults.storageType]);
+                'SecureStorageDelete',
+                defaults);
         }
     },
 };
 
-/**
- * Secure Transport Mega Function
- * More details can be found in the API documentation
- */
-var _secureTransport = {
+
+
+
+//Secure transport Asynchronous API implementation
+var _internalSecureTransport = {
 
     httpMethodType: {
         'GET': 0,
@@ -527,8 +672,7 @@ var _secureTransport = {
         'JSON': 1,
         'XML': 2,
     },
-    open: function(success, fail, options) {
-
+    openAsync: function(success, fail, options) {
         options = options || {};
         //default value for the optional parameters
         var defaults = {
@@ -548,12 +692,12 @@ var _secureTransport = {
             (typeof defaults.serverKey !== 'string') ||
             (!isValidNonNegativeSafeInteger(defaults.timeout))) {
             failInternal('Argument type inconsistency detected', fail);
-        } else if (this.httpMethodType.hasOwnProperty(defaults.method) === false) {
+        } else if (_internalSecureTransport.httpMethodType.hasOwnProperty(defaults.method) === false) {
             failInternal('Invalid HTTP method', fail);
         } else {
             // convert method from string to number            
-            defaults.method = this.httpMethodType[defaults.method];
-            cordova.exec(
+            defaults.method = _internalSecureTransport.httpMethodType[defaults.method];
+            IntelSecurityServicesSecureTransport.openExec(
                 function(instanceID) {
                     successConvertToNumber(instanceID, success, fail);
                 },
@@ -561,10 +705,10 @@ var _secureTransport = {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureTransportOpen', [defaults.url, defaults.method, defaults.serverKey, defaults.timeout]);
+                'SecureTransportOpen', defaults);
         }
     },
-    setURL: function(success, fail, options) {
+    setURLAsync: function(success, fail, options) {
 
         options = options || {};
         //default value for the optional parameters
@@ -584,16 +728,16 @@ var _secureTransport = {
             (typeof defaults.url !== 'string')) {
             failInternal('Argument type inconsistency detected', fail);
         } else {
-            cordova.exec(
+            IntelSecurityServicesSecureTransport.setURLExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureTransportSetURL', [defaults.instanceID, defaults.url, defaults.serverKey]);
+                'SecureTransportSetURL', defaults);
         }
     },
-    setMethod: function(success, fail, options) {
+    setMethodAsync: function(success, fail, options) {
 
         options = options || {};
         //default value for the optional parameters
@@ -610,21 +754,21 @@ var _secureTransport = {
         if ((!isValidNonNegativeSafeInteger(defaults.instanceID)) ||
             (typeof defaults.method !== 'string')) {
             failInternal('Argument type inconsistency detected', fail);
-        } else if (this.httpMethodType.hasOwnProperty(defaults.method) === false) {
+        } else if (_internalSecureTransport.httpMethodType.hasOwnProperty(defaults.method) === false) {
             failInternal('Invalid HTTP method', fail);
         } else {
             // convert method from string to number            
-            defaults.method = this.httpMethodType[defaults.method];
-            cordova.exec(
+            defaults.method = _internalSecureTransport.httpMethodType[defaults.method];
+            IntelSecurityServicesSecureTransport.setMethodExec(
                 success,
                 function(code) {
                     failInternal(code, fail);
                 },
                 'IntelSecurity',
-                'SecureTransportSetMethod', [defaults.instanceID, defaults.method]);
+                'SecureTransportSetMethod', defaults);
         }
     },
-    setHeaders: function(success, fail, options) {
+    setHeadersAsync: function(success, fail, options) {
 
         options = options || {};
         //default value for the optional parameters
@@ -661,16 +805,17 @@ var _secureTransport = {
                 return;
             }
         }
-        cordova.exec(
+        defaults.headers = headersJSON;
+        IntelSecurityServicesSecureTransport.setHeadersExec(
             success,
             function(code) {
                 failInternal(code, fail);
             },
             'IntelSecurity',
-            'SecureTransportSetHeaders', [defaults.instanceID, headersJSON]);
+            'SecureTransportSetHeaders', defaults);
 
     },
-    sendRequest: function(success, fail, options) {
+    sendRequestAsync: function(success, fail, options) {
 
         options = options || {};
         //default value for the optional parameters
@@ -691,11 +836,11 @@ var _secureTransport = {
             (typeof defaults.requestFormat !== 'string') ||
             (!(defaults.secureDataDescriptors instanceof Array))) {
             failInternal('Argument type inconsistency detected', fail);
-        } else if (this.requestFormatType.hasOwnProperty(defaults.requestFormat) === false) {
+        } else if (_internalSecureTransport.requestFormatType.hasOwnProperty(defaults.requestFormat) === false) {
             failInternal('Invalid request format', fail);
         } else {
             // convert format from string to number
-            defaults.requestFormat = this.requestFormatType[defaults.requestFormat];
+            defaults.requestFormat = _internalSecureTransport.requestFormatType[defaults.requestFormat];
             var secureDataDescriptorsJSON = null;
             try {
                 secureDataDescriptorsJSON = JSON.stringify(defaults.secureDataDescriptors);
@@ -703,7 +848,8 @@ var _secureTransport = {
                 failInternal('Internal error occurred', fail);
                 return;
             }
-            cordova.exec(
+            defaults.secureDataDescriptors = secureDataDescriptorsJSON;
+            IntelSecurityServicesSecureTransport.sendRequestExec(
                 success,
                 function(code) {
                     failInternal(code, function(errObj) {
@@ -714,36 +860,124 @@ var _secureTransport = {
                     });
                 },
                 'IntelSecurity',
-                'SecureTransportSendRequest', [defaults.instanceID, defaults.requestBody, defaults.requestFormat, secureDataDescriptorsJSON]);
+                'SecureTransportSendRequest', defaults);
         }
+    },
+    abortAsync: function(success, fail, instanceID) {
+
+        if (!isValidNonNegativeSafeInteger(instanceID)) {
+            failInternal('Argument type inconsistency detected', fail);
+        } else {
+            IntelSecurityServicesSecureTransport.abortExec(
+                success,
+                function(code) {
+                    failInternal(code, fail);
+                },
+                'IntelSecurity',
+                'SecureTransportAbort', {
+                    instanceID: instanceID
+                });
+        }
+    },
+    destroyAsync: function(success, fail, instanceID) {
+
+        if (!isValidNonNegativeSafeInteger(instanceID)) {
+            failInternal('Argument type inconsistency detected', fail);
+        } else {
+            IntelSecurityServicesSecureTransport.destroyExec(
+                success,
+                function(code) {
+                    failInternal(code, fail);
+                },
+                'IntelSecurity',
+                'SecureTransportDestroy', {
+                    instanceID: instanceID
+                });
+        }
+    }
+};
+
+/**
+ * Secure Data Mega Function
+ * More details can be found in the API documentation
+ */
+var _secureData = {
+    createFromData: function(options) {
+        return _dispatch(arguments, _internalSecureData.createFromDataAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    createFromSealedData: function(options) {
+        return _dispatch(arguments, _internalSecureData.createFromSealedDataAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    changeExtraKey: function(options) {
+        return _dispatch(arguments, _internalSecureData.changeExtraKeyAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getData: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getDataAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getSealedData: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getSealedDataAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getTag: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getTagAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getPolicy: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getPolicyAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getOwners: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getOwnersAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getCreator: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getCreatorAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    getWebOwners: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.getWebOwnersAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+    destroy: function(instanceID) {
+        return _dispatch(arguments, _internalSecureData.destroyAsync, "number"); // Make the call by the methodology he detects (callback or promise).
+    },
+};
+
+/**
+ * Secure Storage Mega Function
+ * More details can be found in the API documentation
+ */
+var _secureStorage = {
+    read: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureStorage.readAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    write: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureStorage.writeAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    delete: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureStorage.deleteAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+};
+
+/**
+ * Secure Transport Mega Function
+ * More details can be found in the API documentation
+ */
+var _secureTransport = {
+    open: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureTransport.openAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    setURL: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureTransport.setURLAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    setMethod: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureTransport.setMethodAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    setHeaders: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureTransport.setHeadersAsync, "object"); // Make the call by the methodology he detects (callback or promise).
+    },
+    sendRequest: function(success, fail, options) {
+        return _dispatch(arguments, _internalSecureTransport.sendRequestAsync, "object"); // Make the call by the methodology he detects (callback or promise).
     },
     abort: function(success, fail, instanceID) {
-
-        if (!isValidNonNegativeSafeInteger(instanceID)) {
-            failInternal('Argument type inconsistency detected', fail);
-        } else {
-            cordova.exec(
-                success,
-                function(code) {
-                    failInternal(code, fail);
-                },
-                'IntelSecurity',
-                'SecureTransportAbort', [instanceID]);
-        }
+        return _dispatch(arguments, _internalSecureTransport.abortAsync, "number"); // Make the call by the methodology he detects (callback or promise).
     },
     destroy: function(success, fail, instanceID) {
-
-        if (!isValidNonNegativeSafeInteger(instanceID)) {
-            failInternal('Argument type inconsistency detected', fail);
-        } else {
-            cordova.exec(
-                success,
-                function(code) {
-                    failInternal(code, fail);
-                },
-                'IntelSecurity',
-                'SecureTransportDestroy', [instanceID]);
-        }
+        return _dispatch(arguments, _internalSecureTransport.destroyAsync, "number"); // Make the call by the methodology he detects (callback or promise).
     }
 };
 
@@ -758,16 +992,17 @@ function errorObj(code, message) {
     this.message = message;
 }
 
+
 /**
  * Cordova export: 
  *  - intel.security.secureData
  *  - intel.security.secureStorage
+ *  - intel.security.secureTransport
  *  - intel.security.errorObject
  */
 module.exports = {
-    //	globalInit		: _globalInit,
     secureData: _secureData,
     secureStorage: _secureStorage,
     secureTransport: _secureTransport,
-    errorObject: errorObj,
+    errorObject: errorObj
 };

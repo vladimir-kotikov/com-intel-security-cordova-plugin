@@ -92,15 +92,15 @@ fixDLLResourceIssue(projectFile);
 function copyFiles()
 {
 	var OSDirectory="";
-	var sourceFile='../../plugins/com.intel.security/src/'+platform+'/libs/'+archName+'/IntelSecurityServicesWRC.dll';
+	var sourceFile='../../plugins/com-intel-security/src/'+platform+'/libs/'+archName+'/IntelSecurityServicesWRC.dll';
 	var targetFile=null;
 	if(platform=='windows8')
 	{
-		targetFile='plugins/com.intel.security/IntelSecurityServicesWRC.dll';
+		targetFile='plugins/com-intel-security/IntelSecurityServicesWRC.dll';
 	}
 	if(platform=='wp')
 	{
-		targetFile='../wp8/plugins/com.intel.security/IntelSecurityServicesWRC.dll';
+		targetFile='../wp8/plugins/com-intel-security/IntelSecurityServicesWRC.dll';
 	}
 	if (fs.existsSync(sourceFile))
 	{
@@ -118,16 +118,16 @@ function copyFiles()
 		process.exit(1);
 	}
 	
-	sourceFile='../../plugins/com.intel.security/src/'+platform+'/libs/'+archName+'/IntelSecurityServicesWRC.winmd';
+	sourceFile='../../plugins/com-intel-security/src/'+platform+'/libs/'+archName+'/IntelSecurityServicesWRC.winmd';
 	targetFile=null;
 	
 	if(platform=='windows8')
 	{
-		targetFile='plugins/com.intel.security/IntelSecurityServicesWRC.winmd';
+		targetFile='plugins/com-intel-security/IntelSecurityServicesWRC.winmd';
 	}
 	if(platform=='wp')
 	{
-		targetFile='../wp8/plugins/com.intel.security/IntelSecurityServicesWRC.winmd';
+		targetFile='../wp8/plugins/com-intel-security/IntelSecurityServicesWRC.winmd';
 	}
 	if (fs.existsSync(sourceFile))
 	{
@@ -194,12 +194,12 @@ function fixDLLResourceIssue(fileName)
 				var newData=null;
 				if(platform=='windows8')
 				{
-					newData=data.replace('Content Include="plugins\\com.intel.security\\IntelSecurityServicesWRC.dll"','PRIResource Include="plugins\\com.intel.security\\IntelSecurityServicesWRC.dll"');
+					newData=data.replace('Content Include="plugins\\com-intel-security\\IntelSecurityServicesWRC.dll"','PRIResource Include="plugins\\com-intel-security\\IntelSecurityServicesWRC.dll"');
 					newData=newData.replace(" <SDKReference","<SDKReference Include=\"Microsoft.VCLibs, Version=11.0\" /> \n <SDKReference ");
 				}
 				if(platform=='wp')
 				{
-					newData=data.replace('Content Include="Plugins\\com.intel.security\\IntelSecurityServicesWRC.dll"','Resource Include="Plugins\\com.intel.security\\IntelSecurityServicesWRC.dll"');
+					newData=data.replace('Content Include="Plugins\\com-intel-security\\IntelSecurityServicesWRC.dll"','Resource Include="Plugins\\com-intel-security\\IntelSecurityServicesWRC.dll"');
 				}
 				fs.writeFileSync(fileName, newData);
 				if(platform=='wp')

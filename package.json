@@ -1,9 +1,9 @@
 {
-  "name": "com.intel.security",
-  "version": "1.4.1",
+  "name": "com-intel-security-cordova-plugin",
+  "version": "2.0.0",
   "description": "App Security API plugin",
   "cordova": {
-    "id": "com.intel.security",
+    "id": "com-intel-security",
     "platforms": [
       "android",
       "ios",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/01org/AppSecurityApi.git"
+    "url": "git+https://github.com/AppSecurityApi/com-intel-security-cordova-plugin.git"
   },
   "keywords": [
     "Intel",
@@ -30,12 +30,13 @@
 	"cryptography",
 	"app",
 	"security",
-	"api"
+	"api",
+	"Visual Studio"
   ],
   "author": "Dan Shmul (Intel Corporation)",
   "license": "SEE LICENSE IN LICENSE",
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/01org/AppSecurityApi/issues"
+    "url": "https://github.com/AppSecurityApi/com-intel-security-cordova-plugin/issues"
   }
 }

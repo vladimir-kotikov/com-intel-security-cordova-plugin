@@ -1,3 +1,18 @@
+2.0.1 (July, 2016)
+	Updated OpenSSL to version 1.0.2h (iOS version is 1.0.2g)
+	Updated libcurl to version 7.49.1 (iOS version is 7.47.1)	
+	Supported Platforms: Android, iOS, Windows MUI 8/8.1/10
+	
+	Known issues:
+	- Creating big SecureData items returns 'Internal Error' on Windows and crashes on iOS & Android instead of returning 'Memory allocation failure' error.
+	
+	The plugin was tested on:
+	- Android Intel and ARM devices
+    - iPhone ARM device
+	- Windows 8 Intel (x86, x64) devices
+    - Windows 8.1  ARM and Intel (x86, x64) devices
+    - Windows 10 Intel (x86, x64) devices
+
 2.0.0 (April, 2016)			
 	Move to promises API (still support callback API)
 	Updated plugin name to 'com-intel-security' to be aligned with NPMJS style

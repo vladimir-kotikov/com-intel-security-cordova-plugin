@@ -42,7 +42,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	result.error_or_warn_code = errorCode ;\
 }
 
-static inline sservice_result_t  CREATE_ERROR( int error_code ) 
+static __inline sservice_result_t  CREATE_ERROR( int error_code ) 
 {
 	sservice_result_t r;
 	SET_ERROR_CODE( r, error_code )
@@ -54,7 +54,7 @@ static inline sservice_result_t  CREATE_ERROR( int error_code )
 * @param [in] info_code - info code to set.
 * @return sservice_result_t, filled with required data.
 */
-static inline sservice_result_t  CREATE_SUCCESS( int info_code ) 
+static __inline sservice_result_t  CREATE_SUCCESS( int info_code )
 {
 	sservice_result_t r;			
 	r.is_success = SSERVICE_SUCCESS ;	

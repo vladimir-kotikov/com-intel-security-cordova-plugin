@@ -3,10 +3,10 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"    
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="com-intel-security"
-    version="2.0.0">
+    version="2.0.1">
     <name>APP Security API</name>
     <description>App Security API plugin</description>
-	<repo>https://github.com/AppSecurityApi/com-intel-security-cordova-plugin.git</repo>
+	<repo>https://github.com/01org/AppSecurityApi.git</repo>
     <license></license>
     <keywords>Intel,intel.security,intel.security.Services,Security Services</keywords>
 

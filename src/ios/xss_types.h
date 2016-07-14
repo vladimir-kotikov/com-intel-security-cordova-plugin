@@ -205,7 +205,11 @@ typedef enum
 #define AES128_SALT_SIZE            (6)
 
 #define CURRENT_STORAGE_FILE_HEADER_VERSION (1)
-#define MAX_STORAGE_ID_LENGTH (1024)       ///size of ID defined as 1k characters( on any language ) that can take maximum 4k bytes in utf8
+#define MAX_STORAGE_ID_LENGTH_DEFAULT (1024)
+#ifndef MAX_STORAGE_ID_LENGTH_EXTRA
+#define MAX_STORAGE_ID_LENGTH_EXTRA (0)
+#endif
+#define MAX_STORAGE_ID_LENGTH  ((MAX_STORAGE_ID_LENGTH_DEFAULT) + (MAX_STORAGE_ID_LENGTH_EXTRA))       ///size of ID defined as 1k characters( on any language ) that can take maximum 4k bytes in utf8
 #define STORAGE_FILE_HEADER_ID (0x5f454741524f5453ul) //STORAGE_
 
 /**

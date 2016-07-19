@@ -114,6 +114,6 @@ Cordova plugin
 		
 		Note: iOS has not been tested yet but according to the documentation it should be the same as Android with one change- make sure you choose iOS in the build.
 
-Crosswalk Extnesion 
+Crosswalk Extension
 ===================		
 For Crosswalk extension please see https://github.com/AppSecurityApi/com-intel-security-crosswalk-extension.git

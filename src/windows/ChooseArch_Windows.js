@@ -21,7 +21,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 ******************************************************************************/
 
 var fs = require('fs');
-var PLUGINS_DIR_IN_WINDOWS_PLATFORM='platforms/windows/plugins/com-intel-security';
+var PLUGINS_DIR_IN_WINDOWS_PLATFORM='platforms/windows/plugins/com-intel-security-cordova-plugin';
 // check if we already run the script
 fs.access(PLUGINS_DIR_IN_WINDOWS_PLATFORM+'/win8/x86/IntelSecurityServicesWRC.dll', fs.F_OK, function (err) {
   if (err !== null){
@@ -69,7 +69,7 @@ function copyFilesIntoProject() {
     var archNames = ['x86', 'x64', 'arm'];
     for (var k = 0; k < winNames.length; k++) {
         for (var j = 0; j < archNames.length; j++) {
-			var srcPath = 'plugins/com-intel-security/src/windows/'+winNames[k] + '/' + archNames[j] + '/';
+			var srcPath = 'plugins/com-intel-security-cordova-plugin/src/windows/'+winNames[k] + '/' + archNames[j] + '/';
 			var dstPath = PLUGINS_DIR_IN_WINDOWS_PLATFORM +'/'+ winNames[k] + '/' + archNames[j] + '/';
             var dllFilesName = ['IntelSecurityServicesWRC.dll', 'IntelSecurityServicesWRC.winmd'];
 
@@ -112,19 +112,19 @@ function fixProjectFile8(fileName) {
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'x86'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win8\\x86\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win8\\x86\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'x64'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win8\\x64\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win8\\x64\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'ARM'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win8\\ARM\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win8\\ARM\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
@@ -145,19 +145,19 @@ function fixProjectFile81(fileName) {
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'x86'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win8\\x86\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win8\\x86\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'x64'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win8\\x64\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win8\\x64\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'ARM'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win8\\ARM\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win8\\ARM\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
@@ -178,19 +178,19 @@ function fixProjectFile10(fileName) {
                 var newData = data.replace("</Project>",
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'x86'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win10\\x86\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win10\\x86\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'x64'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win10\\x64\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win10\\x64\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +
                     "\n\t<ItemGroup Condition=\"'$(Platform)' == 'ARM'\">" +
                     "\n\t\t<Reference Include=\"IntelSecurityServicesWRC\">" +
-                    "\n\t\t\t<HintPath>plugins\\com-intel-security\\win10\\ARM\\IntelSecurityServicesWRC.winmd</HintPath>" +
+                    "\n\t\t\t<HintPath>plugins\\com-intel-security-cordova-plugin\\win10\\ARM\\IntelSecurityServicesWRC.winmd</HintPath>" +
                     "\n\t\t\t<IsWinMDFile>true</IsWinMDFile>" +
                     "\n\t\t</Reference>" +
                     "\n\t</ItemGroup>" +

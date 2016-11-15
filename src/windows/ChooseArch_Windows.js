@@ -163,9 +163,6 @@ function fixProjectFile81(fileName) {
                     "\n\t</ItemGroup>" +
                     "\n</Project>"
                 );
-                newData = newData.replace("<OutputPath>build\\windows",
-                    "<OutputPath>build\\windows81"
-                );
                 fs.writeFileSync(fileName, newData);
             }
         });
@@ -198,9 +195,6 @@ function fixProjectFile10(fileName) {
                     "\n\t\t<SDKReference Include=\"Microsoft.VCLibs, Version=14.0\" />" +
                     "\n\t</ItemGroup>" +
                     "\n</Project>"
-                );
-                newData = newData.replace("<OutputPath>build\\windows",
-                    "<OutputPath>build\\windows10"
                 );
                 fs.writeFileSync(fileName, newData);
             }
